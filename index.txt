@@ -1,0 +1,180 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bombay Gujarat Roadlines</title>
+<style>
+:root{--n:#0b1f45;--n2:#1a3a78;--g:#c9a227;--bg:#f2f4f9;--t:#1b2333}
+*{box-sizing:border-box}body{margin:0;font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--t)}
+header{background:var(--n);color:#fff;padding:8px 14px;display:flex;align-items:center;gap:10px;border-bottom:3px solid var(--g);position:sticky;top:0;z-index:5}
+header b{font:700 17px Georgia,serif;color:var(--g);letter-spacing:.5px;display:block}header small{font-size:10px;letter-spacing:1.5px}
+header .sp{flex:1}header input{max-width:200px}
+#ham{display:none;background:none;color:#fff;border:0;font-size:22px}
+#wrap{display:flex}nav{width:200px;background:var(--n2);min-height:calc(100vh - 56px);padding:8px 0;flex-shrink:0}
+nav a{display:block;padding:10px 16px;color:#dfe6f5;cursor:pointer;border-left:4px solid transparent}
+nav a.on,nav a:hover{background:var(--n);border-color:var(--g);color:#fff}
+main{flex:1;padding:14px;min-width:0}
+h2{margin:0;color:var(--n)}h3,h4{color:var(--n)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}.bar h2{flex:1}
+input,select,textarea,button{font:inherit;padding:7px 9px;border:1px solid #b9c2d6;border-radius:5px;background:#fff;color:var(--t)}
+button{cursor:pointer}button.pri{background:var(--n);color:#fff;border-color:var(--n)}button.pri:hover{background:var(--g);color:#000}
+button.dn{color:#b00020}td button{padding:3px 7px;margin:1px;font-size:12px}
+.tw{overflow-x:auto;background:#fff;border-radius:6px;box-shadow:0 1px 3px #0002}
+table{border-collapse:collapse;width:100%}th{background:var(--n);color:#fff;text-align:left;font-weight:600}
+th,td{padding:7px 9px;border-bottom:1px solid #e3e7f0;white-space:nowrap}tr.ft td{font-weight:700;background:#fbf5dc}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin:10px 0}
+.card{background:#fff;border-left:4px solid var(--g);padding:10px 12px;border-radius:6px;box-shadow:0 1px 3px #0002}.card small{color:#667}.card b{display:block;font-size:19px;color:var(--n)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+#modal{display:none;position:fixed;inset:0;background:#000a;z-index:9;overflow:auto;padding:10px}
+#mc{background:#fff;max-width:760px;margin:0 auto;padding:16px;border-radius:8px}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}.g label{display:flex;flex-direction:column;font-size:12px;gap:3px}
+.kv td:first-child{font-weight:600;width:38%}.ph{text-align:center;border-bottom:3px double var(--n);margin-bottom:8px;color:var(--n)}.ph b{font:700 20px Georgia,serif}
+.m{color:#667;font-size:12px}.tabs button.on{background:var(--g)}
+#pr{display:none}
+@media(max-width:800px){#ham{display:block}nav{position:fixed;left:-220px;top:56px;z-index:8;transition:left .2s;height:100%}nav.open{left:0}header input{max-width:110px}}
+@media print{#app,#modal{display:none!important}#pr{display:block!important}body{background:#fff}}
+</style></head><body>
+<div id="app"><header><button id="ham" onclick="$('nav').classList.toggle('open')">☰</button><div><b>BOMBAY GUJARAT ROADLINES</b><small>TRANSPORT &amp; LOGISTICS MANAGEMENT</small></div><span class="sp"></span><input id="gs" placeholder="Search…" oninput="go('search')"><button onclick="setL()" id="lg">हिं</button></header>
+<div id="wrap"><nav></nav><main id="main"></main></div></div><div id="modal"><div id="mc"></div></div><div id="pr"></div>
+<script>
+const $=s=>document.querySelector(s),n=v=>+v||0,fmt=v=>'₹'+n(v).toLocaleString('en-IN',{maximumFractionDigits:2}),
+esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),
+uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7),
+today=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10),
+sum=(a,f)=>a.reduce((x,y)=>x+n(f(y)),0);
+let L=localStorage.bgrL||'en',view='dash',DB={},idb=null,Q={},rp='customers';
+const HI={Dashboard:'डैशबोर्ड',Bookings:'बुकिंग',Customers:'ग्राहक','Truck Owners':'ट्रक मालिक',Drivers:'ड्राइवर','LR / Bilty':'एलआर / बिल्टी',Payments:'भुगतान',Expenses:'खर्च',Reminders:'रिमाइंडर',Reports:'रिपोर्ट','Backup / Restore':'बैकअप / रिस्टोर',Add:'जोड़ें',Edit:'संपादित करें',Delete:'हटाएं',View:'देखें',Ledger:'खाता',Print:'प्रिंट',Save:'सहेजें',Cancel:'रद्द करें',Search:'खोजें',Actions:'क्रिया',all:'सभी',today:'आज',week:'इस सप्ताह',month:'इस माह',custom:'तारीख चुनें','No records':'कोई रिकॉर्ड नहीं',records:'रिकॉर्ड','Total bookings':'कुल बुकिंग','Today bookings':'आज की बुकिंग','Total freight':'कुल भाड़ा','Total brokerage':'कुल दलाली','Amount received':'प्राप्त राशि','Amount paid':'चुकाई राशि','Customer outstanding':'ग्राहक बकाया','Owner outstanding':'मालिक देय','Total expenses':'कुल खर्च','Estimated net income':'अनुमानित शुद्ध आय','Recent bookings':'हाल की बुकिंग','Pending payments':'बाकी भुगतान','Upcoming reminders':'आगामी रिमाइंडर',Name:'नाम','Party name':'पार्टी का नाम','Booking No':'बुकिंग नं.',Date:'तारीख',Freight:'भाड़ा',Balance:'बकाया',Status:'स्थिति',Amount:'राशि',Mobile:'मोबाइल',Notes:'टिप्पणी','is required':'आवश्यक है','Download JSON backup':'JSON बैकअप डाउनलोड','Restore JSON backup':'JSON बैकअप रिस्टोर'};
+const t=k=>L=='hi'&&HI[k]||k;
+const ST=['bookings','parties','owners','drivers','lrs','payments','expenses','reminders'];
+/* ---------- storage ---------- */
+const ls=s=>localStorage['bgr_'+s]=JSON.stringify(DB[s]);
+async function init(){try{idb=await new Promise((ok,no)=>{const r=indexedDB.open('bgr_tms',1);r.onupgradeneeded=()=>ST.forEach(s=>r.result.createObjectStore(s,{keyPath:'id'}));r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)});
+for(const s of ST)DB[s]=await new Promise(ok=>{const q=idb.transaction(s).objectStore(s).getAll();q.onsuccess=()=>ok(q.result)})}
+catch(e){idb=null;ST.forEach(s=>DB[s]=JSON.parse(localStorage['bgr_'+s]||'[]'))}
+try{navigator.storage&&navigator.storage.persist()}catch(e){}}
+function put(s,o){const i=DB[s].findIndex(x=>x.id===o.id);i<0?DB[s].push(o):DB[s][i]=o;idb?idb.transaction(s,'readwrite').objectStore(s).put(o):ls(s)}
+function del(s,id){DB[s]=DB[s].filter(x=>x.id!==id);idb?idb.transaction(s,'readwrite').objectStore(s).delete(id):ls(s)}
+function replaceAll(d){ST.forEach(s=>{DB[s]=d[s];if(idb){const o=idb.transaction(s,'readwrite').objectStore(s);o.clear();d[s].forEach(x=>o.put(x))}else ls(s)})}
+/* ---------- calculations (single source of truth: payments) ---------- */
+const byId=(s,id)=>DB[s].find(x=>x.id===id)||{},nm=(s,id)=>byId(s,id).name||'—',
+ent=e=>e?nm(e[0]=='P'?'parties':'owners',e.slice(2)):'—',
+recv=b=>sum(DB.payments.filter(p=>p.bookingId===b.id&&p.entity[0]=='P'),p=>p.amount),
+paid=b=>sum(DB.payments.filter(p=>p.bookingId===b.id&&p.entity[0]=='O'),p=>p.amount),
+balB=b=>n(b.freight)-recv(b),
+stat=b=>{const r=recv(b);return r<=0?'Unpaid':r>=n(b.freight)?'Paid':'Partial'},
+pFr=p=>sum(DB.bookings.filter(b=>b.party===p.id),b=>b.freight),pRc=p=>sum(DB.payments.filter(x=>x.entity=='P:'+p.id),x=>x.amount),
+partyBal=p=>n(p.opening)+pFr(p)-pRc(p),
+oFr=o=>sum(DB.bookings.filter(b=>b.owner===o.id),b=>b.ownerFreight),oPd=o=>sum(DB.payments.filter(x=>x.entity=='O:'+o.id),x=>x.amount),
+ownerBal=o=>n(o.opening)+oFr(o)-oPd(o);
+/* ---------- schema ---------- */
+const F=(k,l,ty='text',o={})=>({k,l,ty,...o}),TX=(k,l,r)=>F(k,l,'text',{r}),NM=(k,l,r)=>F(k,l,'number',{r}),
+PM=['Cash','UPI','Bank Transfer','Cheque'];
+const SC={
+bookings:{t:'Bookings',v:id=>bd(id),vl:'View',x:r=>nm('parties',r.party)+' '+nm('owners',r.owner),
+f:[F('no','Booking No','text',{ro:1}),F('date','Date','date',{r:1}),F('party','Customer / Party','sel',{src:'parties',r:1}),TX('contact','Customer contact'),TX('gstin','GSTIN'),F('owner','Truck owner','sel',{src:'owners',r:1}),TX('truck','Truck registration no.',1),TX('driver','Driver name'),TX('dmob','Driver mobile'),TX('from','Loading location',1),TX('to','Delivery location',1),TX('goods','Goods description'),NM('weight','Weight (tons)'),NM('freight','Freight amount',1),NM('ownerFreight','Truck owner freight',1),F('brokerage','Brokerage (auto)','number',{ro:1}),F('advance','Advance received now','number',{newOnly:1}),F('notes','Notes','ta')],
+c:['no','date',['Party',r=>esc(nm('parties',r.party))],'truck',['Route',r=>esc(r.from+' → '+r.to)],['Freight',r=>fmt(r.freight)],['Brokerage',r=>fmt(r.brokerage)],['Balance',r=>fmt(balB(r))],['Status',r=>stat(r)]],
+used:r=>DB.payments.some(p=>p.bookingId===r.id)||DB.lrs.some(l=>l.bookingId===r.id)?'Booking has payments or LR entries. Delete them first.':'',
+pre:(o,old)=>{if(DB.bookings.some(x=>x.id!==o.id&&x.no===o.no))return'Duplicate booking number';if(n(o.advance)>n(o.freight))return'Advance exceeds freight';if(n(o.ownerFreight)<0||n(o.freight)<0)return'Invalid amount';o.brokerage=n(o.freight)-n(o.ownerFreight);if(old&&(recv(old)>n(o.freight)||paid(old)>n(o.ownerFreight)))return'Freight is less than payments already recorded for this booking'}},
+parties:{t:'Customers',v:id=>ledger('parties',id),vl:'Ledger',f:[TX('name','Party name',1),TX('phone','Contact number'),TX('gstin','GSTIN'),TX('address','Address'),TX('city','City'),NM('opening','Opening balance')],
+c:['name','phone','city',['Total freight',p=>fmt(pFr(p))],['Received',p=>fmt(pRc(p))],['Pending',p=>fmt(partyBal(p))]],
+used:r=>DB.bookings.some(b=>b.party===r.id)||DB.payments.some(p=>p.entity=='P:'+r.id)?'Customer has bookings or payments.':''},
+owners:{t:'Truck Owners',v:id=>ledger('owners',id),vl:'Ledger',f:[TX('name','Owner name',1),TX('phone','Mobile number'),TX('address','Address'),TX('trucks','Truck registration numbers'),F('bank','Bank / payment details','ta'),NM('opening','Opening balance')],
+c:['name','phone','trucks',['Truck freight',o=>fmt(oFr(o))],['Paid',o=>fmt(oPd(o))],['Payable',o=>fmt(ownerBal(o))]],
+used:r=>DB.bookings.some(b=>b.owner===r.id)||DB.payments.some(p=>p.entity=='O:'+r.id)?'Owner has bookings or payments.':''},
+drivers:{t:'Drivers',f:[TX('name','Driver name',1),TX('phone','Phone number'),TX('licence','Driving licence no.'),TX('truck','Truck number'),TX('address','Address'),F('notes','Notes','ta')],c:['name','phone','licence','truck']},
+lrs:{t:'LR / Bilty',v:id=>lrp(id),vl:'Print',x:r=>{const b=byId('bookings',r.bookingId);return b.no+' '+nm('parties',b.party)+' '+b.truck},
+f:[TX('lrNo','LR number',1),TX('bilty','Bilty number'),TX('challan','Challan number'),F('bookingId','Booking reference','sel',{o:()=>DB.bookings.map(b=>[b.id,b.no+' – '+nm('parties',b.party)]),r:1}),F('date','Document date','date',{r:1})],
+c:['lrNo','bilty','challan','date',['Booking',r=>esc(byId('bookings',r.bookingId).no)],['Customer',r=>esc(nm('parties',byId('bookings',r.bookingId).party))],['Truck',r=>esc(byId('bookings',r.bookingId).truck)]],
+pre:o=>DB.lrs.some(x=>x.id!==o.id&&x.lrNo===o.lrNo)?'Duplicate LR number':''},
+payments:{t:'Payments',x:r=>ent(r.entity)+' '+byId('bookings',r.bookingId).no,
+f:[F('date','Date','date',{r:1}),F('entity','Party (customer receipt / owner payment)','sel',{o:()=>[...DB.parties.map(p=>['P:'+p.id,'Customer: '+p.name]),...DB.owners.map(p=>['O:'+p.id,'Owner: '+p.name])],r:1}),F('bookingId','Booking reference','sel',{o:()=>DB.bookings.map(b=>[b.id,b.no+' – '+nm('parties',b.party)])}),F('type','Payment type','sel',{o:()=>['Advance','Partial','Balance','Full'].map(x=>[x,x]),r:1}),F('mode','Payment mode','sel',{o:()=>PM.map(x=>[x,x]),r:1}),TX('ref','Transaction reference'),NM('amount','Amount',1),F('notes','Notes','ta')],
+c:['date',['Kind',r=>r.entity[0]=='P'?'Receipt':'Paid to owner'],['Party',r=>esc(ent(r.entity))],['Booking',r=>esc(byId('bookings',r.bookingId).no||'—')],'type','mode','ref',['Amount',r=>fmt(r.amount)]],
+pre:(o,old)=>{if(n(o.amount)<=0)return'Amount must be greater than 0';if(o.bookingId){const b=byId('bookings',o.bookingId),P=o.entity[0]=='P';if(o.entity!==(P?'P:'+b.party:'O:'+b.owner))return'Selected party does not match this booking';const oth=sum(DB.payments.filter(p=>p.id!==o.id&&p.bookingId===b.id&&p.entity[0]==o.entity[0]),p=>p.amount);if(oth+n(o.amount)>n(P?b.freight:b.ownerFreight)+.005)return'Total payments would exceed the booking amount';}
+if(DB.payments.some(p=>p.id!==o.id&&p.date==o.date&&p.entity==o.entity&&p.bookingId==o.bookingId&&n(p.amount)==n(o.amount)&&p.mode==o.mode&&p.ref==o.ref)&&!confirm('A payment with identical details already exists. Save anyway?'))return'Cancelled to avoid duplicate'}},
+expenses:{t:'Expenses',f:[F('date','Date','date',{r:1}),F('category','Category','sel',{o:()=>['Diesel','Toll','Driver expenses','Office expenses','Vehicle repair','Phone & internet','Commission','Other'].map(x=>[x,x]),r:1}),TX('desc','Description'),NM('amount','Amount',1),F('mode','Payment mode','sel',{o:()=>PM.map(x=>[x,x])})],c:['date','category','desc',['Amount',r=>fmt(r.amount)],'mode'],pre:o=>n(o.amount)<=0?'Amount must be greater than 0':''},
+reminders:{t:'Reminders',f:[F('date','Date','date',{r:1}),F('type','Type','sel',{o:()=>['Customer payment follow-up','Truck owner payment','Delivery follow-up','Pending documents','Business task'].map(x=>[x,x]),r:1}),TX('text','Details',1),F('done','Done','chk')],c:['date','type','text',['Status',r=>r.done?'✔ Done':'Pending']],xa:r=>`<button onclick="A('reminders','x','${r.id}')">${r.done?'Reopen':'Done'}</button>`}};
+/* ---------- helpers ---------- */
+function tbl(h,rows,foot){return`<div class=tw><table><tr>${h.map(x=>`<th>${t(x)}</th>`).join('')}</tr>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')||`<tr><td colspan=${h.length}>${t('No records')}</td></tr>`}${foot?`<tr class=ft>${foot.map(c=>`<td>${c}</td>`).join('')}</tr>`:''}</table></div>`}
+function inR(d,s){if(s.r=='all')return 1;const T=today();if(s.r=='today')return d==T;if(s.r=='week'){const x=new Date();x.setDate(x.getDate()-(x.getDay()+6)%7);return d>=new Date(x.getTime()-x.getTimezoneOffset()*6e4).toISOString().slice(0,10)&&d<=T}if(s.r=='month')return d.slice(0,7)==T.slice(0,7);return(!s.a||d>=s.a)&&(!s.b||d<=s.b)}
+const mt=(s,r,st)=>{const sc=SC[s];return(!st.q||(Object.values(r).join(' ')+' '+(sc.x?sc.x(r):'')).toLowerCase().includes(st.q.toLowerCase()))&&(!sc.f.some(f=>f.k=='date')||inR(r.date||'',st))};
+function lt(s,st=Q[s]){const sc=SC[s],cs=sc.c.map(c=>typeof c=='string'?[sc.f.find(f=>f.k==c).l,r=>esc(r[c])]:c),
+rows=DB[s].filter(r=>mt(s,r,st)).sort((a,b)=>((b.date||'')+b.ts)>((a.date||'')+a.ts)?1:-1);
+return tbl([...cs.map(c=>c[0]),'Actions'],rows.map(r=>[...cs.map(c=>c[1](r)),acts(s,r)]))+`<p class=m>${rows.length} ${t('records')}</p>`}
+const acts=(s,r)=>{const sc=SC[s];return(sc.v?`<button onclick="A('${s}','v','${r.id}')">${t(sc.vl)}</button>`:'')+(sc.xa?sc.xa(r):'')+`<button onclick="A('${s}','e','${r.id}')">${t('Edit')}</button><button class=dn onclick="A('${s}','d','${r.id}')">${t('Delete')}</button>`};
+function A(s,a,id){if(a=='v')SC[s].v(id);if(a=='e')form(s,id);if(a=='d'){const m=SC[s].used&&SC[s].used(byId(s,id));if(m)return alert(m);if(confirm('Delete this record permanently?')){del(s,id);go(view)}}if(a=='x'){const r=byId(s,id);r.done=!r.done;put(s,r);go(view)}}
+function list(s){const sc=SC[s],st=Q[s]=Q[s]||{q:'',r:'all',a:'',b:''},hd=sc.f.some(f=>f.k=='date');
+return`<div class=bar><h2>${t(sc.t)}</h2><button class=pri onclick="form('${s}')">+ ${t('Add')}</button></div><div class=bar><input placeholder="${t('Search')}" value="${esc(st.q)}" oninput="fl('${s}','q',this.value)">${hd?`<select onchange="fl('${s}','r',this.value)">${['all','today','week','month','custom'].map(x=>`<option value=${x} ${st.r==x?'selected':''}>${t(x)}</option>`).join('')}</select>${st.r=='custom'?`<input type=date value="${st.a}" onchange="fl('${s}','a',this.value)"><input type=date value="${st.b}" onchange="fl('${s}','b',this.value)">`:''}`:''}</div><div id=tb>${lt(s)}</div>`}
+function fl(s,k,v){Q[s][k]=v;k=='r'?go(view):$('#tb').innerHTML=lt(s)}
+/* ---------- forms ---------- */
+const modal=h=>{$('#mc').innerHTML=h;$('#modal').style.display='block'},closeM=()=>$('#modal').style.display='none';
+const nextNo=()=>'BGR-'+String(Math.max(0,...DB.bookings.map(b=>parseInt((b.no||'').replace(/\D/g,''))||0))+1).padStart(4,'0');
+function form(s,id){const sc=SC[s],o=id?byId(s,id):null,r=o||{};
+let h=`<h3>${t(id?'Edit':'Add')} ${t(sc.t)}</h3><div class=g>`;
+for(const f of sc.f){if(f.newOnly&&o)continue;let v=r[f.k];if(v==null)v=f.k=='date'?today():f.k=='no'?nextNo():'';
+const i=`id=f_${f.k} ${f.ro?'readonly':''}`;let c;
+if(f.ty=='sel')c=`<select ${i}><option value="">—</option>${(f.o?f.o():DB[f.src].map(x=>[x.id,x.name])).map(([a,b])=>`<option value="${esc(a)}" ${a==v?'selected':''}>${esc(b)}</option>`).join('')}</select>`;
+else if(f.ty=='ta')c=`<textarea ${i}>${esc(v)}</textarea>`;else if(f.ty=='chk')c=`<input type=checkbox ${i} ${v?'checked':''}>`;
+else c=`<input ${i} type=${f.ty} step=any value="${esc(v)}">`;
+h+=`<label>${t(f.l)}${f.r?' *':''}${c}</label>`}
+modal(h+`</div><div class=bar><button class=pri onclick="saveF('${s}','${id||''}')">${t('Save')}</button><button onclick="closeM()">${t('Cancel')}</button></div>`);
+if(s=='bookings'){const c=()=>$('#f_brokerage').value=(n($('#f_freight').value)-n($('#f_ownerFreight').value)).toFixed(2);['freight','ownerFreight'].forEach(k=>$('#f_'+k).oninput=c);c();
+$('#f_party').onchange=e=>{const p=byId('parties',e.target.value);if(!$('#f_contact').value)$('#f_contact').value=p.phone||'';if(!$('#f_gstin').value)$('#f_gstin').value=p.gstin||''}}}
+function saveF(s,id){const sc=SC[s],old=id?byId(s,id):null,o={...(old||{}),id:id||uid()};if(!old)o.ts=Date.now();
+for(const f of sc.f){if(f.newOnly&&old)continue;const e=$('#f_'+f.k);let v=f.ty=='chk'?e.checked:e.value.trim();
+if(f.r&&v==='')return alert(t(f.l)+' '+t('is required'));
+if(f.ty=='number'){if(n(v)<0&&f.k!='opening')return alert(t(f.l)+': must be ≥ 0');v=v===''?0:+v}o[f.k]=v}
+const er=sc.pre&&sc.pre(o,old);if(er)return alert(er);
+let adv=0;if(s=='bookings'){adv=n(o.advance);delete o.advance}
+put(s,o);if(adv>0)put('payments',{id:uid(),ts:Date.now(),date:o.date,entity:'P:'+o.party,bookingId:o.id,type:'Advance',mode:'Cash',ref:'',amount:adv,notes:'Advance at booking'});
+closeM();go(view)}
+/* ---------- documents / print ---------- */
+const hdr=()=>`<div class=ph><b>BOMBAY GUJARAT ROADLINES</b><br><small>TRANSPORT &amp; LOGISTICS MANAGEMENT</small></div>`,
+kv=a=>`<div class=tw><table class=kv>${a.map(([k,v])=>`<tr><td>${k}</td><td style="white-space:normal">${v}</td></tr>`).join('')}</table></div>`,
+pbtn=`<div class=bar><button class=pri onclick="pr()">🖨 ${'Print'}</button><button onclick="closeM()">Close</button></div>`,
+pr=()=>{$('#pr').innerHTML=$('#doc').innerHTML;window.print()};
+function bd(id){const b=byId('bookings',id),p=byId('parties',b.party),pa=DB.payments.filter(x=>x.bookingId===id).sort((a,c)=>a.date>c.date?1:-1);
+modal(`<div id=doc>${hdr()}<h3>Booking ${esc(b.no)}</h3>${kv([['Date',b.date],['Customer',esc(p.name)+' '+esc(b.contact)],['GSTIN',esc(b.gstin)],['Truck owner',esc(nm('owners',b.owner))],['Truck / Driver',esc(b.truck)+' / '+esc(b.driver)+' '+esc(b.dmob)],['Route',esc(b.from+' → '+b.to)],['Goods / Weight',esc(b.goods)+' / '+n(b.weight)+' t'],['Freight',fmt(b.freight)],['Owner freight',fmt(b.ownerFreight)],['Brokerage',fmt(b.brokerage)],['Received from customer',fmt(recv(b))],['Customer balance',fmt(balB(b))],['Paid to owner',fmt(paid(b))],['Owner balance',fmt(n(b.ownerFreight)-paid(b))],['Payment status',stat(b)],['Notes',esc(b.notes)]])}<h4>History</h4>${tbl(['Date','Payment','Mode','Ref','Amount'],pa.map(x=>[x.date,x.entity[0]=='P'?'Receipt '+x.type:'Owner payment '+x.type,x.mode,esc(x.ref),fmt(x.amount)]))}<p class=m>LR: ${DB.lrs.filter(l=>l.bookingId==id).map(l=>esc(l.lrNo)).join(', ')||'—'}</p></div>${pbtn}`)}
+function lrp(id){const l=byId('lrs',id),b=byId('bookings',l.bookingId);
+modal(`<div id=doc>${hdr()}<h3 style="text-align:center">LORRY RECEIPT / BILTY / CHALLAN</h3>${kv([['LR No.',esc(l.lrNo)],['Bilty No.',esc(l.bilty)],['Challan No.',esc(l.challan)],['Date',l.date],['Booking Ref.',esc(b.no)],['Consignor / Party',esc(nm('parties',b.party))+' '+esc(b.gstin)],['Truck No.',esc(b.truck)],['Driver',esc(b.driver)+' '+esc(b.dmob)],['From',esc(b.from)],['To',esc(b.to)],['Goods',esc(b.goods)],['Weight',n(b.weight)+' tons']])}<br><br><table><tr><td>Consignor signature</td><td>Driver signature</td><td>Authorised signatory</td></tr></table></div>${pbtn}`)}
+function ledger(s,id){const P=s=='parties',e=byId(s,id);let R=[];
+DB.bookings.filter(b=>b[P?'party':'owner']==id).forEach(b=>R.push([b.date,'Booking '+b.no+' '+b.from+' → '+b.to,n(P?b.freight:b.ownerFreight),0]));
+DB.payments.filter(p=>p.entity==(P?'P:':'O:')+id).forEach(p=>R.push([p.date,(P?'Receipt ':'Paid ')+p.type+' ('+p.mode+') '+p.ref,0,n(p.amount)]));
+R.sort((a,b)=>a[0]>b[0]?1:-1);let bal=n(e.opening);const rows=[['','Opening balance','','',fmt(bal)]].concat(R.map(r=>{bal+=r[2]-r[3];return[r[0],esc(r[1]),r[2]?fmt(r[2]):'',r[3]?fmt(r[3]):'',fmt(bal)]}));
+modal(`<div id=doc>${hdr()}<h3>${P?'Customer':'Truck owner'} ledger: ${esc(e.name)}</h3>${tbl(['Date','Particulars',P?'Freight (Dr)':'Payable (Cr)',P?'Received (Cr)':'Paid (Dr)','Balance'],rows)}<p><b>${P?'Pending':'Payable'}: ${fmt(bal)}</b></p></div>${pbtn}`)}
+/* ---------- dashboard ---------- */
+function dash(){const B=DB.bookings,T=today(),rc=sum(DB.payments.filter(p=>p.entity[0]=='P'),p=>p.amount),pd=sum(DB.payments.filter(p=>p.entity[0]=='O'),p=>p.amount),br=sum(B,b=>b.brokerage),ex=sum(DB.expenses,e=>e.amount);
+const C=[['Total bookings',B.length],['Today bookings',B.filter(b=>b.date==T).length],['Total freight',fmt(sum(B,b=>b.freight))],['Total brokerage',fmt(br)],['Amount received',fmt(rc)],['Amount paid',fmt(pd)],['Customer outstanding',fmt(sum(DB.parties,partyBal))],['Owner outstanding',fmt(sum(DB.owners,ownerBal))],['Total expenses',fmt(ex)],['Estimated net income',fmt(br-ex)]];
+const rec=[...B].sort((a,b)=>(b.date+b.ts)>(a.date+a.ts)?1:-1).slice(0,6),pend=B.filter(b=>balB(b)>.5).slice(0,8),rem=DB.reminders.filter(r=>!r.done).sort((a,b)=>a.date>b.date?1:-1).slice(0,8);
+return`<h2>${t('Dashboard')}</h2><div class=cards>${C.map(c=>`<div class=card><small>${t(c[0])}</small><b>${c[1]}</b></div>`).join('')}</div><div class=cols><div><h4>${t('Recent bookings')}</h4>${tbl(['Booking No','Date','Freight'],rec.map(b=>[esc(b.no),b.date,fmt(b.freight)]))}</div><div><h4>${t('Pending payments')}</h4>${tbl(['Booking No','Customer','Balance'],pend.map(b=>[esc(b.no),esc(nm('parties',b.party)),fmt(balB(b))]))}</div><div><h4>${t('Upcoming reminders')}</h4>${tbl(['Date','Details'],rem.map(r=>[(r.date<T?'⚠ ':'')+r.date,esc(r.type+': '+r.text)]))}</div></div><p class=m>Data is stored in this browser only (IndexedDB) and does not sync across devices. Use Backup / Restore to move or protect data.</p>`}
+/* ---------- reports ---------- */
+function period(g,cash){const l={d:10,m:7,y:4}[g],M={},A=(d,f,v)=>{const k=(d||'').slice(0,l);if(k)(M[k]=M[k]||{bk:0,fr:0,br:0,rc:0,pd:0,ex:0})[f]+=v};
+DB.bookings.forEach(b=>{A(b.date,'bk',1);A(b.date,'fr',n(b.freight));A(b.date,'br',n(b.brokerage))});DB.payments.forEach(p=>A(p.date,p.entity[0]=='P'?'rc':'pd',n(p.amount)));DB.expenses.forEach(e=>A(e.date,'ex',n(e.amount)));
+const K=Object.keys(M).sort().reverse();return cash?tbl(['Period','Inflow (received)','Outflow (owners)','Expenses','Net cash'],K.map(k=>[k,fmt(M[k].rc),fmt(M[k].pd),fmt(M[k].ex),fmt(M[k].rc-M[k].pd-M[k].ex)])):tbl(['Period','Bookings','Freight','Brokerage','Received','Paid to owners','Expenses','Net income'],K.map(k=>[k,M[k].bk,fmt(M[k].fr),fmt(M[k].br),fmt(M[k].rc),fmt(M[k].pd),fmt(M[k].ex),fmt(M[k].br-M[k].ex)]))}
+const RP={customers:()=>tbl(['Customer','Opening','Freight','Received','Outstanding'],DB.parties.map(p=>[esc(p.name),fmt(p.opening),fmt(pFr(p)),fmt(pRc(p)),fmt(partyBal(p))]),['Total','','','',fmt(sum(DB.parties,partyBal))]),
+owners:()=>tbl(['Owner','Opening','Freight','Paid','Payable'],DB.owners.map(o=>[esc(o.name),fmt(o.opening),fmt(oFr(o)),fmt(oPd(o)),fmt(ownerBal(o))]),['Total','','','',fmt(sum(DB.owners,ownerBal))]),
+profit:()=>tbl(['Booking','Date','Freight','Owner freight','Brokerage / Profit'],DB.bookings.map(b=>[esc(b.no),b.date,fmt(b.freight),fmt(b.ownerFreight),fmt(b.brokerage)]),['Total','',fmt(sum(DB.bookings,b=>b.freight)),fmt(sum(DB.bookings,b=>b.ownerFreight)),fmt(sum(DB.bookings,b=>b.brokerage))]),
+daily:()=>period('d'),monthly:()=>period('m'),yearly:()=>period('y'),cash:()=>period('m',1),
+expenses:()=>{const M={};DB.expenses.forEach(e=>M[e.category]=(M[e.category]||0)+n(e.amount));return tbl(['Category','Amount'],Object.keys(M).map(k=>[k,fmt(M[k])]),['Total',fmt(sum(DB.expenses,e=>e.amount))])},
+pl:()=>{const fr=sum(DB.bookings,b=>b.freight),of=sum(DB.bookings,b=>b.ownerFreight),ex=sum(DB.expenses,e=>e.amount),rc=sum(DB.payments.filter(p=>p.entity[0]=='P'),p=>p.amount),pd=sum(DB.payments.filter(p=>p.entity[0]=='O'),p=>p.amount);
+return kv([['Freight billed to customers',fmt(fr)],['Less: freight payable to truck owners',fmt(of)],['Brokerage earned (gross income)',fmt(fr-of)],['Less: expenses',fmt(ex)],['<b>Estimated net income</b>','<b>'+fmt(fr-of-ex)+'</b>'],['Cash view: freight received',fmt(rc)],['Cash view: paid to owners',fmt(pd)],['Cash view: expenses',fmt(ex)],['<b>Net cash flow</b>','<b>'+fmt(rc-pd-ex)+'</b>'],['Customer outstanding',fmt(sum(DB.parties,partyBal))],['Owner payable',fmt(sum(DB.owners,ownerBal))]])}};
+const RN={customers:'Customer outstanding',owners:'Owner outstanding',profit:'Booking-wise profit / brokerage',daily:'Daily',monthly:'Monthly',yearly:'Yearly',expenses:'Expense report',cash:'Cash flow',pl:'Profit & loss'};
+const reports=()=>`<div class=bar><h2>${t('Reports')}</h2><button onclick="window.print()" class=pri onmousedown="$('#pr').innerHTML=$('#main').innerHTML">🖨 Print</button></div><div class="bar tabs">${Object.keys(RN).map(k=>`<button class="${k==rp?'on':''}" onclick="rp='${k}';go('reports')">${RN[k]}</button>`).join('')}</div>${RP[rp]()}`;
+/* ---------- backup / csv ---------- */
+function dl(name,txt,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type}));a.download=name;a.click()}
+const bk=()=>dl('BGR-backup-'+today()+'.json',JSON.stringify({app:'BGR-TMS',version:1,date:new Date().toISOString(),data:DB},null,1),'application/json');
+function restore(file){const r=new FileReader();r.onload=()=>{let d;try{d=JSON.parse(r.result).data;if(JSON.parse(r.result).app!='BGR-TMS'||!ST.every(s=>Array.isArray(d[s])&&d[s].every(x=>x&&x.id)))throw 0}catch(e){return alert('Invalid backup file. Nothing was changed.')}
+if(confirm('Backup contains: '+ST.map(s=>d[s].length+' '+s).join(', ')+'.\n\nThis will REPLACE all current data. A backup of current data will be downloaded first. Continue?')){bk();replaceAll(d);go('dash')}};r.readAsText(file)}
+const csvE=v=>/[",\n]/.test(v=String(v??''))?'"'+v.replace(/"/g,'""')+'"':v;
+function csvX(s){const K=[...new Set(DB[s].flatMap(Object.keys))];dl(s+'-'+today()+'.csv',[K.join(','),...DB[s].map(r=>K.map(k=>csvE(r[k])).join(','))].join('\n'),'text/csv')}
+function parseCSV(x){const R=[];let r=[],c='',q=0;for(let i=0;i<x.length;i++){const h=x[i];if(q){if(h=='"'){if(x[i+1]=='"'){c+='"';i++}else q=0}else c+=h}else if(h=='"')q=1;else if(h==','){r.push(c);c=''}else if(h=='\n'||h=='\r'){if(h=='\r'&&x[i+1]=='\n')i++;r.push(c);c='';R.push(r);r=[]}else c+=h}if(c||r.length){r.push(c);R.push(r)}return R.filter(z=>z.join(''))}
+function csvI(file){const s=$('#cs').value,r=new FileReader();r.onload=()=>{const R=parseCSV(r.result.replace(/^\uFEFF/,'')),H=R.shift()||[],keys=SC[s].f.map(f=>f.k),key=s=='expenses'?'amount':s=='reminders'?'text':'name';
+if(!H.includes(key))return alert('CSV must have a "'+key+'" column. Nothing imported.');
+const rows=R.map(c=>{const o={id:uid(),ts:Date.now()};H.forEach((h,i)=>{if(keys.includes(h))o[h]=SC[s].f.find(f=>f.k==h).ty=='number'?n(c[i]):(c[i]||'')});return o}).filter(o=>o[key]);
+if(rows.length&&confirm('Import '+rows.length+' new '+s+' records? Existing records are kept.')){rows.forEach(o=>put(s,o));go(view)}};r.readAsText(file)}
+const backup=()=>`<h2>${t('Backup / Restore')}</h2><div class=cols><div class=card><h4>JSON backup</h4><button class=pri onclick="bk()">${t('Download JSON backup')}</button><p><b>${t('Restore JSON backup')}</b><br><input type=file accept=".json" onchange="restore(this.files[0]);this.value=''"></p></div>
+<div class=card><h4>CSV</h4><select id=cs>${ST.map(s=>`<option value=${s}>${s}</option>`).join('')}</select> <button onclick="csvX($('#cs').value)">Export CSV</button><p>Import CSV (customers, owners, drivers, expenses, reminders; header row must use field names such as name, phone, amount)<br><input type=file accept=".csv" onchange="csvI(this.files[0]);this.value=''"></p></div></div>
+<p class=m>Records are saved in this browser's IndexedDB (localStorage fallback). They persist after refresh but do NOT sync between devices or browsers, and clearing site data erases them. Download a JSON backup regularly.</p>`;
+/* ---------- navigation ---------- */
+const NAV=[['dash','Dashboard'],['bookings','Bookings'],['lrs','LR / Bilty'],['parties','Customers'],['owners','Truck Owners'],['drivers','Drivers'],['payments','Payments'],['expenses','Expenses'],['reminders','Reminders'],['reports','Reports'],['backup','Backup / Restore']];
+const V={dash,reports,backup,search:()=>{const q=$('#gs').value.trim();if(!q)return`<h2>${t('Search')}</h2><p class=m>Type a booking no., party, truck, driver, LR no. or owner.</p>`;const st={q,r:'all'};return`<h2>${t('Search')}: ${esc(q)}</h2>`+ST.map(s=>DB[s].some(r=>mt(s,r,st))?`<h3>${t(SC[s].t)}</h3>`+lt(s,st):'').join('')}};
+ST.forEach(s=>V[s]=()=>list(s));
+function go(v){view=v;$('nav').innerHTML=NAV.map(([k,l])=>`<a data-v=${k} class="${k==v?'on':''}" onclick="$('#gs').value='';go('${k}')">${t(l)}</a>`).join('');$('#main').innerHTML=V[v]();$('nav').classList.remove('open');$('#gs').placeholder=t('Search')+'…'}
+function setL(){L=L=='en'?'hi':'en';localStorage.bgrL=L;$('#lg').textContent=L=='en'?'हिं':'EN';go(view)}
+init().then(()=>{$('#lg').textContent=L=='en'?'हिं':'EN';go('dash')});
+</script></body></html>
